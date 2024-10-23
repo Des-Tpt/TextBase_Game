@@ -48,12 +48,20 @@ def fade_in(surface, speed=5):
     alpha = 255
 
     while alpha > 0:
+        # Set the alpha for the fade surface
         fade.set_alpha(alpha)
-        draw_hud() 
+
+        # Draw the HUD and fade
+        surface.fill(BG_COLOR)
+        draw_hud()  # Draw the HUD here so it's visible during the fade
         surface.blit(fade, (0, 0)) 
-        pygame.display.flip()
+        
+        pygame.display.update()  # Update the screen after all changes
+
+        # Decrease alpha for the next iteration
         alpha -= speed
         pygame.time.delay(30)
+
 
 def fade_in_text(surface, text, color, rect, status, font, delay=1):
     total_length = len(text)
@@ -70,10 +78,13 @@ def fade_in_text(surface, text, color, rect, status, font, delay=1):
         if status == False:
             break
 
+        # Draw the HUD and the fading text
         surface.fill(BG_COLOR)
-        draw_hud()
+        draw_hud()  # Always draw the HUD in case there are any updates
         drawText(surface, text[:current_length], color, rect, font)
-        pygame.display.flip()
+
+        pygame.display.update()  # Only update the screen once per loop
+
 
 def drawText(surface, text, color, rect, font, bkg=None): # Code em chôm được từ github.
     rect = pygame.Rect(rect)
@@ -235,7 +246,7 @@ def change_scene(text, options, text_rect, option_rect):
 
                 return next_scene  # Trả về scene tiếp theo
 
-        pygame.display.flip()  # Cập nhật màn hình
+        pygame.display.update()  # Cập nhật màn hình
 
 
 text_rect = pygame.Rect(480, 100, 760, 600) # Khung hoạt động của đoạn văn.
@@ -409,7 +420,6 @@ def main():
     current_scene = 0
     fade_in(screen)
 
-    clock = pygame.time.Clock()
     running = True
 
     while running:
@@ -425,9 +435,6 @@ def main():
         else: 
             pygame.quit()
             
-        clock.tick(60)  # Giới hạn FPS ở 60
-
-
 
 if __name__ == '__main__':
     main()
