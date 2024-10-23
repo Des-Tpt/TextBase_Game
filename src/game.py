@@ -202,6 +202,7 @@ def draw_and_handle_options(surface, options, option_rect, highlighted_index=Non
 def change_scene(text, options, text_rect, option_rect):
     highlighted_index = -1
     running_scene = True
+    fade_in_text(screen, text, TEXT_COLOR, text_rect, running_scene, font)
 
     while running_scene:
         for event in pygame.event.get():
@@ -424,7 +425,7 @@ def main():
         else: 
             pygame.quit()
             
-        clock.tick(30)  # Giới hạn FPS ở 60
+        clock.tick(60)  # Giới hạn FPS ở 60
 
 
 
