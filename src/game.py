@@ -71,6 +71,11 @@ def fade_in_text(surface, text, color, rect, status, font, delay=1):
     while current_length < total_length:
         current_time = pygame.time.get_ticks()
 
+        # Kiểm tra sự kiện chuột
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:  # Khi click chuột
+                return  # Dừng hiệu ứng fade-in và thoát khỏi hàm
+
         if current_time - start_time > delay:
             current_length += 5
             start_time = current_time
@@ -78,86 +83,48 @@ def fade_in_text(surface, text, color, rect, status, font, delay=1):
         if status == False:
             break
 
-        # Draw the HUD and the fading text
+        # Vẽ HUD và text với hiệu ứng fade-in
         surface.fill(BG_COLOR)
-        draw_hud()  # Always draw the HUD in case there are any updates
+        draw_hud()  # Luôn vẽ HUD nếu có cập nhật
         drawText(surface, text[:current_length], color, rect, font)
 
-        pygame.display.update()  # Only update the screen once per loop
+        pygame.display.update()  # Cập nhật màn hình một lần mỗi vòng lặp
 
 
-def drawText(surface, text, color, rect, font, bkg=None): # Code em chôm được từ github.
+def drawText(surface, text, color, rect, font, bkg=None): 
     rect = pygame.Rect(rect)
     y = rect.top - 50
     lineSpacing = 10 
     indent = 30
     fontHeight = font.get_sized_height()
 
-    lines= text.split('#')
+    lines = text.split('#')
 
     for index, line in enumerate(lines):
         is_first_line = True  
-
         while line:
             i = 1
-            indent_x = rect.left + (indent if is_first_line else 0) #Dùng để thụt lề ở đoạn văn đầu tiên.
+            indent_x = rect.left + (indent if is_first_line else 0)
 
             if y + fontHeight > rect.bottom:
                 break
 
-            while font.get_rect(line[:i]).width < rect.width and i < len(line): # Đây là hàm kiểm tra chiều rộng từ đầu văn phản đến thứ tự thứ i.
-                i += 1  #Nếu vẫn bé hơn chiều rộng của khung và text vẫn còn, cộng +1 cho i.
+            # Lưu kết quả của get_rect để tránh gọi nhiều lần
+            while font.get_rect(line[:i]).width < rect.width and i < len(line): 
+                i += 1  
 
-            if i < len(line): # Nếu hết dòng rồi mà đoạn văn vẫn chưa hết.
-                i = line.rfind(" ", 0, i) + 1 #Tìm vị trí của dấu cách gần i nhất để không thay ngựa giữa dòng.
+            if i < len(line): 
+                i = line.rfind(" ", 0, i) + 1 
 
-            if bkg: # Đoạn này được dùng để tạo ra 1 bức ảnh từ đoạn text đã viết. 
-                image = font.render(line[:i], fgcolor=color, bgcolor=bkg)[0]
-            else:
-                image = font.render(line[:i], fgcolor=color)[0]
+            image = font.render(line[:i], fgcolor=color, bgcolor=bkg)[0] if bkg else font.render(line[:i], fgcolor=color)[0]
 
-            surface.blit(image, (indent_x, y)) # Render bức ảnh ra.
-            y += fontHeight + lineSpacing # Xuống dòng.
+            surface.blit(image, (indent_x, y))  
+            y += fontHeight + lineSpacing 
 
-            line = line[i:] # Cắt đoạn text từ i ra sau. [:i] là từ trước tới i, [i:] là từ i về sau.
+            line = line[i:]  
             is_first_line = False
 
     return line
-
-def get_text_height(text, font, rect):
-    lines = text.split('#')  # Chia đoạn văn thành các dòng
-    font_height = font.get_sized_height()
-    line_spacing = 10  # Khoảng cách giữa các dòng
-
-    total_height = 0
-
-    # Duyệt qua từng dòng và tính chiều cao
-    for line in lines:
-        words = line.split()  # Tách từng dòng thành các từ
-
-        while words:
-            i = 1
-            while font.get_rect(" ".join(words[:i])).width < rect.width and i < len(words):
-                i += 1
-
-            # Tăng tổng chiều cao với mỗi dòng mới
-            total_height += font_height + line_spacing
-            words = words[i:]
-    return total_height
-
-def draw_text_and_options(surface, text, options, text_rect, option_rect, highlighted_index=None):
-    
-    drawText(surface, text, TEXT_COLOR, text_rect, font)  # Vẽ đoạn văn
-
-    # Tính chiều cao của đoạn văn bản
-    text_height = get_text_height(text, font, text_rect)
-
-    # Cập nhật vị trí Y cho options, cách đoạn văn 100px
-    option_rect.top = text_rect.top + text_height
-    
-    draw_line(screen, (200, 128, 128), (465, option_rect.top - 35), (screen_width - 310, option_rect.top - 35), 2)
-
-    return draw_and_handle_options(surface, options, option_rect, highlighted_index)
 
 def draw_and_handle_options(surface, options, option_rect, highlighted_index=None):
     option_y = option_rect.top
@@ -166,49 +133,84 @@ def draw_and_handle_options(surface, options, option_rect, highlighted_index=Non
 
     option_hitboxes = []
 
-
     for i, option in enumerate(options):
         has_requirements, _ = check_requirements(option, player)
         option_text = option["text"] if has_requirements else option.get("sateless", "Không thể thực hiện hành động này")
 
-        if has_requirements:
-            option_color = HIGHLIGHT_COLOR if i == highlighted_index else OPTION_COLOR  # Vàng nếu được chọn, Trắng nếu không
-        else:
-            option_color = (150, 150, 150)  # Màu xám nếu không đạt yêu cầu
+        option_color = HIGHLIGHT_COLOR if i == highlighted_index and has_requirements else (150, 150, 150) if not has_requirements else OPTION_COLOR
 
         current_y = option_y
         hitbox_height = 0 
 
         while option_text:
             j = 1
-            while font.get_rect(option_text[:j]).width < option_rect.width and j < len(option_text):
+            # Lưu trữ giá trị get_rect để tránh gọi nhiều lần trong khi render
+            rendered_width = font.get_rect(option_text[:j]).width
+            while rendered_width < option_rect.width and j < len(option_text):
                 j += 1
+                rendered_width = font.get_rect(option_text[:j]).width
 
             if j < len(option_text):
                 j = option_text.rfind(" ", 0, j) + 1
 
             font.render_to(surface, (option_rect.left, current_y), option_text[:j], option_color)
-            current_y += option_height + lineSpacing 
+            current_y += option_height + lineSpacing
 
             option_text = option_text[j:]
             hitbox_height += option_height + lineSpacing 
 
-        # Chỉ thêm hitbox cho các lựa chọn đạt yêu cầu
         if has_requirements:
             option_hitboxes.append(pygame.Rect(option_rect.left, option_y, option_rect.width, hitbox_height))
         else:
-            option_hitboxes.append(None)  # None cho tùy chọn không thể chọn
+            option_hitboxes.append(None)
 
         option_y += hitbox_height
 
+    # Xử lý sự kiện chuột tách biệt để không phải tính toán hitbox khi render
     mouse_pos = pygame.mouse.get_pos()
-    highlighted_index = -1
+    new_highlighted_index = -1
 
     for i, hitbox in enumerate(option_hitboxes):
         if hitbox is not None and hitbox.collidepoint(mouse_pos):
-            highlighted_index = i
+            new_highlighted_index = i
 
-    return highlighted_index
+    return new_highlighted_index
+
+def draw_text_and_options(surface, text, options, text_rect, option_rect, highlighted_index=None):
+    drawText(surface, text, TEXT_COLOR, text_rect, font)
+
+    text_height = get_text_height(text, font, text_rect)
+    option_rect.top = text_rect.top + text_height
+
+    draw_line(screen, (200, 128, 128), (465, option_rect.top - 35), (screen_width - 310, option_rect.top - 35), 2)
+
+    return draw_and_handle_options(surface, options, option_rect, highlighted_index)
+
+def get_text_height(text, font, rect):
+    lines = text.split('#')  # Chia đoạn văn thành các đoạn nhỏ
+    font_height = font.get_sized_height()
+    line_spacing = 10  # Khoảng cách giữa các dòng
+    total_height = 0
+
+    # Tính chiều cao của từng đoạn văn bản
+    for line in lines:
+        while line:
+            i = 1
+            # Lưu kết quả của get_rect để tránh gọi lại
+            rendered_width = font.get_rect(line[:i]).width
+            while rendered_width < rect.width and i < len(line):
+                i += 1
+                rendered_width = font.get_rect(line[:i]).width
+
+            if i < len(line):
+                i = line.rfind(" ", 0, i) + 1
+
+            # Tăng tổng chiều cao với mỗi dòng
+            total_height += font_height + line_spacing
+            line = line[i:]  # Chuyển sang phần còn lại của đoạn văn
+
+    return total_height
+
 
 def change_scene(text, options, text_rect, option_rect):
     highlighted_index = -1
