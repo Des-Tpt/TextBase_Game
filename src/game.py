@@ -1,5 +1,7 @@
 import pygame
 import pygame.freetype
+import random
+from popup import show_popup
 
 pygame.init()
 
@@ -61,17 +63,32 @@ def fade_in_text(surface, text, color, rect, status, font, delay=1):
     while current_length < total_length:
         current_time = pygame.time.get_ticks()
 
+        # Kiểm tra sự kiện
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return
+            if event.type == pygame.MOUSEBUTTONDOWN:  # Kiểm tra click chuột
+                return  # Dừng fade nếu có click
+
         if current_time - start_time > delay:
             current_length += 5
             start_time = current_time
 
-        if status == False:
+        if not status:
             break
 
         surface.fill(BG_COLOR)
         draw_hud()
         drawText(surface, text[:current_length], color, rect, font)
         pygame.display.flip()
+
+    # Đảm bảo vẽ hoàn chỉnh văn bản nếu vòng lặp kết thúc
+    surface.fill(BG_COLOR)
+    draw_hud()
+    drawText(surface, text, color, rect, font)
+    pygame.display.flip()
+
 
 def drawText(surface, text, color, rect, font, bkg=None): # Code em chôm được từ github.
     rect = pygame.Rect(rect)
@@ -210,21 +227,28 @@ def change_scene(text, options, text_rect, option_rect):
 
         draw_hud()
 
+        # Hiển thị văn bản và các tùy chọn
         highlighted_index = draw_text_and_options(
             screen, text, options, text_rect, option_rect, highlighted_index
-            )
+        )
 
         if pygame.mouse.get_pressed()[0]:  # Kiểm tra click chuột
             if highlighted_index != -1:
                 selected_option = options[highlighted_index]
 
-                # Cập nhật thuộc tính người chơi nếu có
-                if "attributes" in selected_option:
-                    for key, value in selected_option["attributes"].items():
-                        player[key] = value
+                # Áp dụng hiệu ứng của lựa chọn (nếu có)
+                apply_status(selected_option, player)
 
-                # Chuyển đến scene tiếp theo dựa trên lựa chọn
-                return selected_option.get("next_scene", -1)  # Trả về scene tiếp theo
+                # Kiểm tra nếu có danh sách scene tiếp theo
+                next_scenes = selected_option.get("next_scenes")
+                if next_scenes:
+                    # Random scene từ danh sách
+                    next_scene = random.choice(next_scenes)
+                else:
+                    # Nếu không có danh sách, lấy scene bình thường
+                    next_scene = selected_option.get("next_scene", -1)
+
+                return next_scene  # Trả về scene tiếp theo
 
         pygame.display.flip()  # Cập nhật màn hình
 
@@ -236,17 +260,18 @@ ui_rect = pygame.Rect(750, 100, 1000, 600 ) # Khung giao diện
 # Player Stat và các scene cho demo.
 
 player = {
-    "name": 0,
+    "name": "",
     "armor": 0,
     "health": 0,
     "strength": 0,
     "appetite": 0,
     "coin": 0,
     "magical": "false",
+    "magical-number-cast": 0,
     "role": '',
     "will": '',
-    "inventory": []
-
+    "inventory": [],
+    "arrow": 0
 }
 
 scenes = [
@@ -260,7 +285,8 @@ scenes = [
                     "role": "Sinner",
                     "armor": 1,
                     "strength": 3,
-                    "magic": 5,
+                    "magic": True,
+                    "magical-number-cast": 3,
                     "will": 'Giết quỷ.',
                     "coin": 10
                 }, "next_scene": 1
@@ -271,7 +297,7 @@ scenes = [
                     "role": "Wanderer",
                     "armor": 2,
                     "strength": 8,
-                    "magic": 0,
+                    "magic": False,
                     "will": 'Sống.',
                     "coin": 2
                 }, "next_scene": 1
@@ -282,7 +308,7 @@ scenes = [
                     "role": "Mercenary",
                     "armor": 4,
                     "strength": 4,
-                    "magic": 0,
+                    "magic": False,
                     "will": 'Khao khát.',
                     "coin": 20
                 }, "next_scene": 1
@@ -293,7 +319,8 @@ scenes = [
                     "role": "Demon Believer",
                     "armor": 2,
                     "strength": 2,
-                    "magic": 5,
+                    "magic": True,
+                    "magical-number-cast": 3,
                     "will": 'Học hỏi quỷ thuật.',
                     "coin": 5
                 }, "next_scene": 1
@@ -301,18 +328,35 @@ scenes = [
         ]
     },
     {
-        "text": ("Ngồi trên lưng chú ngựa Roach, bạn chậm rãi tiến về phía trước trên mặt đất gồ ghề. Những thảm thực vật xanh tươi ở hai bên cánh rừng đang âm thầm vươn mình xóa bỏ những dấu vết cuối cùng của con đường mòn cũ kỹ. Ánh trăng sáng thấp thoáng sau những tán cây rậm, tạo thành những khoảng sáng tối đan xen như một màn kịch bí ẩn diễn ra giữa đêm đen. #Dưới bầu trời đêm đen đặc, dãy núi xa xa hiện lên như những bóng đen u ám, khổng lồ, nuốt chửng lấy bầu trời sao thưa thớt. Ánh trăng bạc vắt ngang qua đỉnh núi, lấp ló sau cạnh biển mây trôi lững lờ.#Ở Lorathern, đặc biệt là Vương đô, chuyện đi đi lại lại dưới ánh trăng mờ chưa bao giờ là điều kỳ lạ... Bạn nhớ lại vô số lần bản thân đã từng dành cả đêm chỉ để đi vòng quanh khắp khu phố thị. #Tuy nhiên... Đây là Northern..."),
+        "text": ("Ngồi trên lưng chú ngựa Roach, bạn chậm rãi tiến về phía trước trên mặt đất gồ ghề. Những thảm thực vật xanh tươi ở hai bên cánh rừng đang âm thầm vươn mình xóa bỏ những dấu vết cuối cùng của con đường mòn cũ kỹ. Ánh trăng sáng thấp thoáng sau những tán cây rậm, tạo thành những khoảng sáng tối đan xen như một màn kịch bí ẩn diễn ra giữa đêm đen. #Dưới bầu trời đêm đen đặc, dãy núi xa xa hiện lên như những bóng đen u ám, khổng lồ, nuốt chửng lấy bầu trời sao thưa thớt. Ánh trăng bạc vắt ngang qua đỉnh núi, lấp ló sau cạnh biển mây trôi lững lờ.#Ở Lorathern, đặc biệt là Vương đô, chuyện đi đi lại lại dưới ánh trăng mờ chưa bao giờ là điều kỳ lạ... Bạn nhớ lại vô số lần bản thân đã từng dành cả đêm chỉ để đi vòng quanh khắp khu phố thị. #Tuy nhiên... Đây là Northern...#Dù khu rừng dường như chìm vào trong tĩnh lặng, nhưng đôi tai của bạn, đôi tai của một kẻ đã sống đủ lâu để có thể mường tượng được hàng nghìn cách chết của bản thân qua mỗi giây, mỗi phút. Bạn sẽ nhận ra nơi này không hoàn toàn yên ắng. Tiếng gió rít khe khẽ luồn qua những tán lá, tiếng kêu văng vẳng của một loài sinh vật xa lạ khiến không gian thêm phần rùng rợn. Có thứ gì đó đang ẩn nấp trong bóng tối... #Bạn ngay lập tức kiểm tra vũ khí của mình..."),
         "options": [
             {
-                "text": "Tiếp tục hành trình.",
-                "requirement": {"stength": 4}, 
-                "sateless": "Bạn quá yếu để tiếp tục cuộc hành trình."
+                "text": "Tôi mang theo một thanh trường kiếm và một tấm khiên gỗ.",
+                "requirement": {"role": ["Sinner","Mercenary"]},
+                "items": ["Trường kiếm", "Khiên gỗ"],
+                "sateless": "Tôi không đủ giàu có để sở hữu một thanh trường kiếm và một tấm khiên gỗ.",
+                "next_scene": 2,
             },
             {
-                "text": "Dừng lại và tìm hiểu nguyên nhân.",
+                "text": "Xạ kích là sở trường của tôi, tôi mang theo một cây nỏ và một bó mũi tên, cùng cây chủy thủ sau hông.",
+                 "requirement": {"role": ["Sinner","Mercenary"]},
+                "items": ["Nỏ", "Chủy thủ", "Bó tên"],
+                "effect": {"arrow": 5 },
+                "sateless": "Tôi không thể sử dụng nỏ và chủy thủ...",
+                "next_scene": 2,
             },
             {
-                "text": "Tìm kiếm một ngôi làng để nghỉ ngơi.",
+                "text": "Một cây rìu cán dài sẽ tiện dụng hơn ở các chuyến đi xa... và một cây dao nhỏ.",
+                "requirement": {"role": ["Mercenary","Wanderer"]},
+                "items": ["Rìu cán dài", "Cây dao nhỏ"],
+                "sateless": "Tại sao tôi phải mang theo rìu?",
+                "next_scene": 2,
+            },
+            {
+                "text": "Chỉ cần sức mạnh ma pháp của tôi là đủ...",
+                "requirement": {"role": ["Sinner","Demon Believer"]},
+                "sateless": "Tôi không thể sử dụng ma pháp.",
+                "next_scene": 2,
             }
         ]
     },
@@ -324,7 +368,7 @@ def apply_status(option, player):
 
     # Gán thông số
     if "attributes" in option:
-        for key, value in option["attributes"].item():
+        for key, value in option["attributes"].items():
             player[key] = value
 
     # sửa đổi thông số
@@ -337,6 +381,7 @@ def apply_status(option, player):
     if "items" in option:
         for item in option["items"]:
             if item not in player["inventory"]:
+                show_popup(screen, f"Bạn đã nhận được {item}.")
                 player["inventory"].append(item)
 
     # Xóa item
@@ -344,14 +389,36 @@ def apply_status(option, player):
         for item in option["remove_items"]:
             if item in player["inventory"]:
                 player["inventory"].remove(item)
+                show_popup(screen, f"Bạn đã mất {item}.")
 
 def check_requirements(option, player):
-    requirement = option.get("requirement")
-    if requirement:
-        for key, value in requirement.items():
-            if player.get(key, 0) < value:
-                return False, key  # Trả về yêu cầu không đạt
+    requirements = option.get("requirement", {})
+    
+    for key, value in requirements.items():
+        if key == "item":
+            # Nếu yêu cầu là item, kiểm tra xem player có bất kỳ item nào trong danh sách không
+            if isinstance(value, list):
+                if not any(item in player["inventory"] for item in value):
+                    return False, key  # Trả về yêu cầu không đạt
+            else:
+                if value not in player["inventory"]:
+                    return False, key  # Trả về yêu cầu không đạt
+                
+        elif key == "role":
+            # Nếu yêu cầu là role, kiểm tra xem player có vai trò nào trong danh sách không
+            if isinstance(value, list):
+                if player.get("role") not in value:
+                    return False, key  # Trả về yêu cầu không đạt
+            else:
+                if player.get("role", '') != value:
+                    return False, key  # Trả về yêu cầu không đạt
+        else:
+                if player.get(key, 0) < value:
+                    return False, key  # Trả về yêu cầu không đạt
+                
     return True, None  # Đáp ứng yêu cầu
+
+
 
 def main():
     current_scene = 0
