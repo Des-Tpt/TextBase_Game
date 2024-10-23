@@ -63,32 +63,17 @@ def fade_in_text(surface, text, color, rect, status, font, delay=1):
     while current_length < total_length:
         current_time = pygame.time.get_ticks()
 
-        # Kiểm tra sự kiện
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                return
-            if event.type == pygame.MOUSEBUTTONDOWN:  # Kiểm tra click chuột
-                return  # Dừng fade nếu có click
-
         if current_time - start_time > delay:
             current_length += 5
             start_time = current_time
 
-        if not status:
+        if status == False:
             break
 
         surface.fill(BG_COLOR)
         draw_hud()
         drawText(surface, text[:current_length], color, rect, font)
         pygame.display.flip()
-
-    # Đảm bảo vẽ hoàn chỉnh văn bản nếu vòng lặp kết thúc
-    surface.fill(BG_COLOR)
-    draw_hud()
-    drawText(surface, text, color, rect, font)
-    pygame.display.flip()
-
 
 def drawText(surface, text, color, rect, font, bkg=None): # Code em chôm được từ github.
     rect = pygame.Rect(rect)
@@ -217,7 +202,6 @@ def draw_and_handle_options(surface, options, option_rect, highlighted_index=Non
 def change_scene(text, options, text_rect, option_rect):
     highlighted_index = -1
     running_scene = True
-    fade_in_text(screen, text, TEXT_COLOR, text_rect, running_scene, font)
 
     while running_scene:
         for event in pygame.event.get():
@@ -381,7 +365,7 @@ def apply_status(option, player):
     if "items" in option:
         for item in option["items"]:
             if item not in player["inventory"]:
-                show_popup(screen, f"Bạn đã nhận được {item}.")
+                show_popup(screen, f"Bạn đã nhận được một {item}.")
                 player["inventory"].append(item)
 
     # Xóa item
@@ -389,7 +373,7 @@ def apply_status(option, player):
         for item in option["remove_items"]:
             if item in player["inventory"]:
                 player["inventory"].remove(item)
-                show_popup(screen, f"Bạn đã mất {item}.")
+                show_popup(screen, f"Bạn đã mất một {item}.")
 
 def check_requirements(option, player):
     requirements = option.get("requirement", {})
@@ -440,7 +424,7 @@ def main():
         else: 
             pygame.quit()
             
-        clock.tick(60)  # Giới hạn FPS ở 60
+        clock.tick(30)  # Giới hạn FPS ở 60
 
 
 
