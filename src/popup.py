@@ -33,6 +33,13 @@ def show_popup(screen, message, duration=2, fade_duration=1):
 
     # Giai đoạn 1: Hiển thị rõ ràng trong duration giây
     while time.time() < end_time:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:  # Nếu người dùng click chuột, thoát ngay khỏi vòng lặp
+                return
+        
         popup_surface.set_alpha(alpha)
         
         # Vẽ viền xung quanh pop-up với độ dày đã xác định
@@ -49,6 +56,13 @@ def show_popup(screen, message, duration=2, fade_duration=1):
     # Giai đoạn 2: Mờ dần trong fade_duration giây
     fade_start_time = time.time()
     while time.time() - fade_start_time < fade_duration:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:  # Nếu người dùng click chuột, thoát ngay khỏi vòng lặp
+                return
+
         # Cập nhật alpha để giảm dần từ 255 về 0 trong khoảng fade_duration
         elapsed_time = time.time() - fade_start_time
         alpha = 255 * (1 - elapsed_time / fade_duration)

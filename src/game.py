@@ -48,17 +48,14 @@ def fade_in(surface, speed=5):
     alpha = 255
 
     while alpha > 0:
-        # Set the alpha for the fade surface
         fade.set_alpha(alpha)
 
-        # Draw the HUD and fade
         surface.fill(BG_COLOR)
-        draw_hud()  # Draw the HUD here so it's visible during the fade
+        draw_hud() 
         surface.blit(fade, (0, 0)) 
         
-        pygame.display.update()  # Update the screen after all changes
+        pygame.display.update()
 
-        # Decrease alpha for the next iteration
         alpha -= speed
         pygame.time.delay(30)
 
@@ -91,40 +88,44 @@ def fade_in_text(surface, text, color, rect, status, font, delay=1):
         pygame.display.update()  # Cập nhật màn hình một lần mỗi vòng lặp
 
 
-def drawText(surface, text, color, rect, font, bkg=None): 
+def drawText(surface, text, color, rect, font, bkg=None): # Code em chôm được từ forum pygame.
     rect = pygame.Rect(rect)
     y = rect.top - 50
     lineSpacing = 10 
     indent = 30
     fontHeight = font.get_sized_height()
 
-    lines = text.split('#')
+    lines= text.split('#')
 
     for index, line in enumerate(lines):
         is_first_line = True  
+
         while line:
             i = 1
-            indent_x = rect.left + (indent if is_first_line else 0)
+            indent_x = rect.left + (indent if is_first_line else 0) #Dùng để thụt lề ở đoạn văn đầu tiên.
 
             if y + fontHeight > rect.bottom:
                 break
 
-            # Lưu kết quả của get_rect để tránh gọi nhiều lần
-            while font.get_rect(line[:i]).width < rect.width and i < len(line): 
-                i += 1  
+            while font.get_rect(line[:i]).width < rect.width and i < len(line): # Đây là hàm kiểm tra chiều rộng từ đầu văn phản đến thứ tự thứ i.
+                i += 1  #Nếu vẫn bé hơn chiều rộng của khung và text vẫn còn, cộng +1 cho i.
 
-            if i < len(line): 
-                i = line.rfind(" ", 0, i) + 1 
+            if i < len(line): # Nếu hết dòng rồi mà đoạn văn vẫn chưa hết.
+                i = line.rfind(" ", 0, i) + 1 #Tìm vị trí của dấu cách gần i nhất để không thay ngựa giữa dòng.
 
-            image = font.render(line[:i], fgcolor=color, bgcolor=bkg)[0] if bkg else font.render(line[:i], fgcolor=color)[0]
+            if bkg: # Đoạn này được dùng để tạo ra 1 bức ảnh từ đoạn text đã viết. 
+                image = font.render(line[:i], fgcolor=color, bgcolor=bkg)[0]
+            else:
+                image = font.render(line[:i], fgcolor=color)[0]
 
-            surface.blit(image, (indent_x, y))  
-            y += fontHeight + lineSpacing 
+            surface.blit(image, (indent_x, y)) # Render bức ảnh ra.
+            y += fontHeight + lineSpacing # Xuống dòng.
 
-            line = line[i:]  
+            line = line[i:] # Cắt đoạn text từ i ra sau. [:i] là từ trước tới i, [i:] là từ i về sau.
             is_first_line = False
 
     return line
+
 
 def draw_and_handle_options(surface, options, option_rect, highlighted_index=None):
     option_y = option_rect.top
@@ -187,7 +188,7 @@ def draw_text_and_options(surface, text, options, text_rect, option_rect, highli
     return draw_and_handle_options(surface, options, option_rect, highlighted_index)
 
 def get_text_height(text, font, rect):
-    lines = text.split('#')  # Chia đoạn văn thành các đoạn nhỏ
+    lines = text.split('#')  # Chia đoạn văn thành các đoạn nhỏ dựa vào dấu #
     font_height = font.get_sized_height()
     line_spacing = 10  # Khoảng cách giữa các dòng
     total_height = 0
@@ -196,8 +197,7 @@ def get_text_height(text, font, rect):
     for line in lines:
         while line:
             i = 1
-            # Lưu kết quả của get_rect để tránh gọi lại
-            rendered_width = font.get_rect(line[:i]).width
+            rendered_width = font.get_rect(line[:i]).width # line[:i]: Từ đầu dòng tới vị trí i.
             while rendered_width < rect.width and i < len(line):
                 i += 1
                 rendered_width = font.get_rect(line[:i]).width
@@ -207,7 +207,7 @@ def get_text_height(text, font, rect):
 
             # Tăng tổng chiều cao với mỗi dòng
             total_height += font_height + line_spacing
-            line = line[i:]  # Chuyển sang phần còn lại của đoạn văn
+            line = line[i:]  # line[:i]: Từ vị trí i tới phần còn lại.
 
     return total_height
 
@@ -230,7 +230,7 @@ def change_scene(text, options, text_rect, option_rect):
             screen, text, options, text_rect, option_rect, highlighted_index
         )
 
-        if pygame.mouse.get_pressed()[0]:  # Kiểm tra click chuột
+        if pygame.mouse.get_pressed()[0]:  # Kiểm tra xem người dùng có click chuột không
             if highlighted_index != -1:
                 selected_option = options[highlighted_index]
 
@@ -253,14 +253,12 @@ def change_scene(text, options, text_rect, option_rect):
 
 text_rect = pygame.Rect(480, 100, 760, 600) # Khung hoạt động của đoạn văn.
 option_rect = pygame.Rect(500, 400, 760, 100) # Khung hoạt động của các lựa chọn.
-ui_rect = pygame.Rect(750, 100, 1000, 600 ) # Khung giao diện
+ui_rect = pygame.Rect(750, 100, 1000, 600 ) # Khung giao diện (máu, giáp, đói bụng). Chưa làm xong.
 
 # Player Stat và các scene cho demo.
 
 player = {
     "name": "",
-    "armor": 0,
-    "health": 0,
     "strength": 0,
     "appetite": 0,
     "coin": 0,
@@ -273,7 +271,7 @@ player = {
 }
 
 scenes = [
-    # Scene 1:
+    # Scene 0:
      {
         "text": ("Những năm năm mươi trước Kỷ Định ranh, thời kỳ tiền lập quốc... #Thời kỳ mà những cỗ lò rèn đầy ắp than hồng vẫn bền bỉ tiếp sức cho ngọn lửa chiến tranh. #Thời kỳ mà những cỗ lò rèn đầy ắp than hồng vẫn bền bỉ tiếp sức cho ngọn lửa chiến tranh. #Thời kỳ mà hòa bình chỉ là một phương ngữ tại các vùng địa cực xa xôi. #Thời kỳ mà hạnh phúc chỉ là giấc một mộng hão huyền. #Thời kỳ mà vững mạnh chỉ là những mảnh kí ức khi hồi tưởng về một thời kỳ xưa cũ. #Lục địa Custandel, vùng đất bị các vị thần ruồng bỏ, luôn đắm chìm trong những cuộc tắm máu chẳng biết đến ngày mai... #Rong rủi phi ngựa băng qua khu rừng dưới chân dãy núi Stoughmagne. Âm thanh xào xạc của cơn gió đêm như đang chào đón một linh hồn khác biệt đặt những bước đầu tiên đến vùng đất người ta hay gọi là Grimhold...#Đó là bạn... Bạn đến đây để..."),
         "options": [
@@ -281,8 +279,7 @@ scenes = [
                 "text": "Tiêu diệt toàn bộ các tông đồ quỷ dữ dưới tư cách là một Sinner - Ma pháp sư quyền năng phục vụ Đế chế...",
                 "attributes": {
                     "role": "Sinner",
-                    "armor": 1,
-                    "strength": 3,
+                    "strength": 6,
                     "magic": True,
                     "magical-number-cast": 3,
                     "will": 'Giết quỷ.',
@@ -293,7 +290,6 @@ scenes = [
                 "text": "Cố gắng tồn tại... Tôi cần tiền, thức ăn, nước uống để tồn tại... Thứ duy nhất tôi có... là sức mạnh cơ bắp.",
                 "attributes": {
                     "role": "Wanderer",
-                    "armor": 2,
                     "strength": 8,
                     "magic": False,
                     "will": 'Sống.',
@@ -304,21 +300,19 @@ scenes = [
                 "text": "Gia nhập một quân đoàn. Tôi sẽ tranh thủ thời kỳ vàng son này để kiếm bạc.",
                 "attributes": {
                     "role": "Mercenary",
-                    "armor": 4,
-                    "strength": 4,
+                    "strength": 5,
                     "magic": False,
                     "will": 'Khao khát.',
                     "coin": 20
                 }, "next_scene": 1
             },
             {
-                "text": "Tìm kiếm sức mạnh ở những con quỷ để thay đổi số phận... Tôi là một tồng đồ...",
+                "text": "Tìm kiếm sức mạnh ở những con quỷ để thay đổi số phận... Tôi tự hào mình là một tồng đồ...",
                 "attributes": {
                     "role": "Demon Believer",
-                    "armor": 2,
-                    "strength": 2,
+                    "strength": 4,
                     "magic": True,
-                    "magical-number-cast": 3,
+                    "magical-number-cast": 2,
                     "will": 'Học hỏi quỷ thuật.',
                     "coin": 5
                 }, "next_scene": 1
@@ -326,19 +320,20 @@ scenes = [
         ]
     },
     {
+        # Scene 1:
         "text": ("Ngồi trên lưng chú ngựa Roach, bạn chậm rãi tiến về phía trước trên mặt đất gồ ghề. Những thảm thực vật xanh tươi ở hai bên cánh rừng đang âm thầm vươn mình xóa bỏ những dấu vết cuối cùng của con đường mòn cũ kỹ. Ánh trăng sáng thấp thoáng sau những tán cây rậm, tạo thành những khoảng sáng tối đan xen như một màn kịch bí ẩn diễn ra giữa đêm đen. #Dưới bầu trời đêm đen đặc, dãy núi xa xa hiện lên như những bóng đen u ám, khổng lồ, nuốt chửng lấy bầu trời sao thưa thớt. Ánh trăng bạc vắt ngang qua đỉnh núi, lấp ló sau cạnh biển mây trôi lững lờ.#Ở Lorathern, đặc biệt là Vương đô, chuyện đi đi lại lại dưới ánh trăng mờ chưa bao giờ là điều kỳ lạ... Bạn nhớ lại vô số lần bản thân đã từng dành cả đêm chỉ để đi vòng quanh khắp khu phố thị. #Tuy nhiên... Đây là Northern...#Dù khu rừng dường như chìm vào trong tĩnh lặng, nhưng đôi tai của bạn, đôi tai của một kẻ đã sống đủ lâu để có thể mường tượng được hàng nghìn cách chết của bản thân qua mỗi giây, mỗi phút. Bạn sẽ nhận ra nơi này không hoàn toàn yên ắng. Tiếng gió rít khe khẽ luồn qua những tán lá, tiếng kêu văng vẳng của một loài sinh vật xa lạ khiến không gian thêm phần rùng rợn. Có thứ gì đó đang ẩn nấp trong bóng tối... #Bạn ngay lập tức kiểm tra vũ khí của mình..."),
         "options": [
             {
                 "text": "Tôi mang theo một thanh trường kiếm và một tấm khiên gỗ.",
                 "requirement": {"role": ["Sinner","Mercenary"]},
-                "items": ["Trường kiếm", "Khiên gỗ"],
+                "add_items": ["thanh trường kiếm", "tấm khiên gỗ"],
                 "sateless": "Tôi không đủ giàu có để sở hữu một thanh trường kiếm và một tấm khiên gỗ.",
                 "next_scene": 2,
             },
             {
                 "text": "Xạ kích là sở trường của tôi, tôi mang theo một cây nỏ và một bó mũi tên, cùng cây chủy thủ sau hông.",
                  "requirement": {"role": ["Sinner","Mercenary"]},
-                "items": ["Nỏ", "Chủy thủ", "Bó tên"],
+                "add_items": ["cây chủy thủ", "chiếc nỏ"],
                 "effect": {"arrow": 5 },
                 "sateless": "Tôi không thể sử dụng nỏ và chủy thủ...",
                 "next_scene": 2,
@@ -346,18 +341,58 @@ scenes = [
             {
                 "text": "Một cây rìu cán dài sẽ tiện dụng hơn ở các chuyến đi xa... và một cây dao nhỏ.",
                 "requirement": {"role": ["Mercenary","Wanderer"]},
-                "items": ["Rìu cán dài", "Cây dao nhỏ"],
+                "add_items": ["cây rìu cán dài", "cây dao nhỏ"],
                 "sateless": "Tại sao tôi phải mang theo rìu?",
                 "next_scene": 2,
             },
             {
-                "text": "Chỉ cần sức mạnh ma pháp của tôi là đủ...",
+                "text": "Tôi chỉ có một con dao găm. Nhưng... ma pháp của tôi là quá đủ...",
                 "requirement": {"role": ["Sinner","Demon Believer"]},
                 "sateless": "Tôi không thể sử dụng ma pháp.",
                 "next_scene": 2,
+                "add_items": ["con dao găm"],
             }
         ]
     },
+    {
+        #Scene 2:
+            "text": ("Sau khi đã đảm bảo rằng vũ khí vẫn còn có thể sử dụng, bạn quật dây cương làm khiến cho chú ngựa hí lên một tiếng to và bắt đầu phi nước kiệu. Bạn vẫn không ngừng đảo mắt giữa hai bên cánh rừng để chắc chắn bản thân sẽ không bỏ lỡ bất kỳ dấu hiệu bất thường nào... #Xào xạc... #Từ trên lưng ngựa, bạn dễ dàng nhận ra sự hỗn loạn của những bụi cỏ dày đặc hai bên đường. Chúng lay động dữ dội, theo cùng hướng mà bạn và con ngựa đang phi đến. Trong sự chuyển động bất thường ấy, đôi mắt bạn bắt được một bóng hình — lờ mờ nhưng dễ đoán — một sinh vật bốn chân với bộ lông trắng. Sói tuyết... bầy của nó đang truy đuổi theo bạn và chú ngựa Roach..."),
+            "options": [
+                {
+                    "text": "Tôi thúc ngựa tăng tốc.",
+                    "attributes": {"health": 4, "armor": 2},
+                    "next_scene": 3,
+                },
+                {
+                    "text": f"Ngựa của tôi không thể nào sánh bằng tốc độ của loài sói tuyết... Tôi rút vũ khí ra và chuẩn bị sẳn sàng cho tình huống xấu nhất.",
+                    "requirement": {"items":["thanh trường kiếm", "cây rìu cán dài"]},
+                    "attributes": {"health": 4, "armor": 2},
+                    "sateless": "Tôi không có vũ khí đủ dài để sử trên lưng ngựa...",
+                    "next_scene": 3,
+                },
+                {
+                    "text": "Tôi dùng nỏ, bắn tên vào những lùm cây chuyển động ở gần con đường mòn.",
+                    "requirement": {"items":["chiếc nỏ"], "arrow": 1},
+                    "sateless": "Tôi không thể dùng nỏ.",
+                    "attributes": {"health": 4, "armor": 2},
+                    "effect": {"arrow": -3},
+                    "next_scene": 4,
+                },
+                {
+                    "text": "Tốn một lượt ma pháp, thi triển hai phép Cầu Lửa bắn những lùm cây, tạo ra ngọn lửa rực giữa cánh.",
+                    "requirement": {"role": ["Sinner", "Demon Believer"], "magical-number-cast": 2},
+                    "sateless": "Tôi không thể thi triển ma pháp.",
+                    "effect": {"magical-number-cast": -2},
+                    "attributes": {"health": 4, "armor": 2},
+                    "next_scene": 5,
+                }
+            ]
+    },
+    {
+        #Scene 3:
+            "text": (""),
+            "options":"",
+    }
 ]
 
 # Các hàm tối ưu hóa cho các dạng lựa chọn
@@ -369,18 +404,19 @@ def apply_status(option, player):
         for key, value in option["attributes"].items():
             player[key] = value
 
-    # sửa đổi thông số
+    # Sửa đổi thông số
     if "effect" in option:
         for key, value in option["effect"].items():
             if isinstance(value, int):
                 player[key] += value  # Cộng dồn cho giá trị
 
     # Thêm item vào inventory
-    if "items" in option:
-        for item in option["items"]:
+    if "add_items" in option:
+        for item in option["add_items"]:
             if item not in player["inventory"]:
                 show_popup(screen, f"Bạn đã nhận được một {item}.")
                 player["inventory"].append(item)
+                print(player)
 
     # Xóa item
     if "remove_items" in option:
@@ -393,35 +429,35 @@ def check_requirements(option, player):
     requirements = option.get("requirement", {})
     
     for key, value in requirements.items():
-        if key == "item":
-            # Nếu yêu cầu là item, kiểm tra xem player có bất kỳ item nào trong danh sách không
+        if key == "items":
+            # Nếu yêu cầu là item, kiểm tra item của player
             if isinstance(value, list):
                 if not any(item in player["inventory"] for item in value):
-                    return False, key  # Trả về yêu cầu không đạt
+                    return False, key  
             else:
                 if value not in player["inventory"]:
-                    return False, key  # Trả về yêu cầu không đạt
+                    return False, key  
                 
         elif key == "role":
-            # Nếu yêu cầu là role, kiểm tra xem player có vai trò nào trong danh sách không
+            # Nếu yêu cầu là role, kiểm tra role của player
             if isinstance(value, list):
                 if player.get("role") not in value:
-                    return False, key  # Trả về yêu cầu không đạt
+                    return False, key 
             else:
                 if player.get("role", '') != value:
-                    return False, key  # Trả về yêu cầu không đạt
+                    return False, key 
         else:
                 if player.get(key, 0) < value:
-                    return False, key  # Trả về yêu cầu không đạt
+                    return False, key
                 
-    return True, None  # Đáp ứng yêu cầu
+    return True, None 
 
 
 
 def main():
     current_scene = 0
     fade_in(screen)
-
+    pygame.display.set_caption('Grimhold')
     running = True
 
     while running:

@@ -21,9 +21,7 @@ background_images = [pygame.transform.scale(img, (screen_width, screen_height)) 
 click_sound = pygame.mixer.Sound('assets/sound/old-radio-button-click-97549.mp3')
 
 # Tải ảnh tiêu đề
-game_title_img = pygame.image.load('assets/img/Hot.png')
-game_title_img = pygame.transform.scale(game_title_img, (game_title_img.get_width() // 8, game_title_img.get_height() // 8))
-game_title_rect = game_title_img.get_rect(center=(screen_width // 1.5, 300))
+
 background_music = pygame.mixer.music.load('assets/sound/Soldier, Poet, King - Cullen Vance.mp3')
 pygame.mixer.music.set_volume(0.25)
 pygame.mixer.music.play(-1)
@@ -69,7 +67,6 @@ def draw_menu(highlighted_index):
     screen.blit(current_bg, (0, 0))
     next_bg.set_alpha(255 - alpha) # Độ trong suốt là 255 - alpha, alpha lúc đầu sẽ là 255, trừ phát ra 0, hình tiếp theo sẽ trong suốt. Nhưng alpha càng ngày càng trừ vậy số này sẽ càng ngày càng lớn và hình tiếp theo càng ngày càng rõ.
     screen.blit(next_bg, (0, 0))
-    screen.blit(game_title_img, game_title_rect)
 
     global menu_rects
     menu_rects = []
