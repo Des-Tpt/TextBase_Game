@@ -2,11 +2,12 @@ import pygame
 import pygame.freetype
 import random
 from popup import show_popup
+from display_stats import display_stats
 
 pygame.init()
 
 screen_width, screen_height = 1600, 900
-screen = pygame.display.set_mode((screen_width, screen_height))
+screen = pygame.display.set_mode((screen_width, screen_height), pygame.DOUBLEBUF)
 
 BG_COLOR = (15, 42, 63)
 TEXT_COLOR = (220, 220, 220)
@@ -31,6 +32,7 @@ def draw_hud():
     line_color = (200, 128, 128) 
     line_width = 2 
 
+    #Vẽ các đường để tạo thành các phần trong UI.
     draw_line(screen, line_color, (screen_width // 3 - 80, 30), (screen_width // 3 - 80, screen_height - 30), line_width)
     draw_line(screen, line_color, (screen_width - 300, 30), (screen_width - 300, screen_height - 30), line_width)
     draw_line(screen, line_color, (screen_width - 30, 30), (screen_width - 30, screen_height - 30), line_width)
@@ -43,7 +45,7 @@ def draw_line(screen, line_color, line_start, line_end, line_width):
     pygame.draw.line(screen, line_color, line_start, line_end, line_width)
 
 def fade_in(surface, speed=5):
-    fade = pygame.Surface((screen_width, screen_height))
+    fade = pygame.Surface((screen_width, screen_height), pygame.SRCALPHA)
     fade.fill((0, 0, 0)) 
     alpha = 255
 
@@ -52,6 +54,7 @@ def fade_in(surface, speed=5):
 
         surface.fill(BG_COLOR)
         draw_hud() 
+        
         surface.blit(fade, (0, 0)) 
         
         pygame.display.update()
@@ -70,8 +73,8 @@ def fade_in_text(surface, text, color, rect, status, font, delay=1):
 
         # Kiểm tra sự kiện chuột
         for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONDOWN:  # Khi click chuột
-                return  # Dừng hiệu ứng fade-in và thoát khỏi hàm
+            if event.type == pygame.MOUSEBUTTONDOWN:  # Khi click chuột.
+                return  # Dừng hiệu ứng fade-in và thoát khỏi hàm.
 
         if current_time - start_time > delay:
             current_length += 5
@@ -84,11 +87,12 @@ def fade_in_text(surface, text, color, rect, status, font, delay=1):
         surface.fill(BG_COLOR)
         draw_hud()  # Luôn vẽ HUD nếu có cập nhật
         drawText(surface, text[:current_length], color, rect, font)
+        display_stats(screen, player)
 
         pygame.display.update()  # Cập nhật màn hình một lần mỗi vòng lặp
 
 
-def drawText(surface, text, color, rect, font, bkg=None): # Code em chôm được từ forum pygame.
+def drawText(surface, text, color, rect, font, bkg=None): # Code em mượn được từ forum pygame.
     rect = pygame.Rect(rect)
     y = rect.top - 50
     lineSpacing = 10 
@@ -107,18 +111,17 @@ def drawText(surface, text, color, rect, font, bkg=None): # Code em chôm đư�
             if y + fontHeight > rect.bottom:
                 break
 
-            while font.get_rect(line[:i]).width < rect.width and i < len(line): # Đây là hàm kiểm tra chiều rộng từ đầu văn phản đến thứ tự thứ i.
+            while font.get_rect(line[:i]).width < rect.width and i < len(line): # Đây là hàm kiểm tra chiều rộng từ đầu văn bản đến thứ tự thứ i.
                 i += 1  #Nếu vẫn bé hơn chiều rộng của khung và text vẫn còn, cộng +1 cho i.
 
             if i < len(line): # Nếu hết dòng rồi mà đoạn văn vẫn chưa hết.
                 i = line.rfind(" ", 0, i) + 1 #Tìm vị trí của dấu cách gần i nhất để không thay ngựa giữa dòng.
 
-            if bkg: # Đoạn này được dùng để tạo ra 1 bức ảnh từ đoạn text đã viết. 
-                image = font.render(line[:i], fgcolor=color, bgcolor=bkg)[0]
+            if bkg: #Render thẳng lên surface.
+                font.render_to(surface, (indent_x, y), line[:i], fgcolor=color, bgcolor=bkg)
             else:
-                image = font.render(line[:i], fgcolor=color)[0]
+                font.render_to(surface, (indent_x, y), line[:i], fgcolor=color)
 
-            surface.blit(image, (indent_x, y)) # Render bức ảnh ra.
             y += fontHeight + lineSpacing # Xuống dòng.
 
             line = line[i:] # Cắt đoạn text từ i ra sau. [:i] là từ trước tới i, [i:] là từ i về sau.
@@ -135,17 +138,19 @@ def draw_and_handle_options(surface, options, option_rect, highlighted_index=Non
     option_hitboxes = []
 
     for i, option in enumerate(options):
-        has_requirements, _ = check_requirements(option, player)
+        has_requirements, _ = check_requirements(option, player) #Kiểm tra xem lựa chọn này có yêu cầu gì không.
         option_text = option["text"] if has_requirements else option.get("sateless", "Không thể thực hiện hành động này")
+        #Nếu có, thì kiểm tra xem có thỏa mãn được yêu cầu đó không, nếu không thì get biến sateless thay vì text.
 
         option_color = HIGHLIGHT_COLOR if i == highlighted_index and has_requirements else (150, 150, 150) if not has_requirements else OPTION_COLOR
+        #Màu của option sẽ phụ thuộc vào việc, nó có đang được hover, đang bị khóa không thể chọn, hay đang bình thường.
 
         current_y = option_y
         hitbox_height = 0 
 
         while option_text:
             j = 1
-            # Lưu trữ giá trị get_rect để tránh gọi nhiều lần trong khi render
+            #Tương tự như draw_text, nhưng vì không không có các đoạn văn nên đơn giản hơn.
             rendered_width = font.get_rect(option_text[:j]).width
             while rendered_width < option_rect.width and j < len(option_text):
                 j += 1
@@ -153,21 +158,20 @@ def draw_and_handle_options(surface, options, option_rect, highlighted_index=Non
 
             if j < len(option_text):
                 j = option_text.rfind(" ", 0, j) + 1
-
             font.render_to(surface, (option_rect.left, current_y), option_text[:j], option_color)
             current_y += option_height + lineSpacing
 
-            option_text = option_text[j:]
-            hitbox_height += option_height + lineSpacing 
+            option_text = option_text[j:] #Cắt bỏ phần đã hiển thị, như draw_text.
+            hitbox_height += option_height + lineSpacing #Tính chiều cao của dòng chữ, để tạo hitbox.
 
-        if has_requirements:
+        if has_requirements: #Kiểm tra xem là requirements có được thỏa mãn không, nếu có tạo 1 rect để người dùng tương tác.
             option_hitboxes.append(pygame.Rect(option_rect.left, option_y, option_rect.width, hitbox_height))
-        else:
+        else:                #Nếu không, không tạo rect.
             option_hitboxes.append(None)
 
-        option_y += hitbox_height
+        option_y += hitbox_height #Xuống dòng, render tiếp option còn lại.
 
-    # Xử lý sự kiện chuột tách biệt để không phải tính toán hitbox khi render
+    # Xử lý sự kiện chuột tách biệt để không phải tính toán hitbox khi render.
     mouse_pos = pygame.mouse.get_pos()
     new_highlighted_index = -1
 
@@ -188,12 +192,12 @@ def draw_text_and_options(surface, text, options, text_rect, option_rect, highli
     return draw_and_handle_options(surface, options, option_rect, highlighted_index)
 
 def get_text_height(text, font, rect):
-    lines = text.split('#')  # Chia đoạn văn thành các đoạn nhỏ dựa vào dấu #
+    lines = text.split('#')  # Chia đoạn văn thành các đoạn nhỏ dựa vào dấu #.
     font_height = font.get_sized_height()
-    line_spacing = 10  # Khoảng cách giữa các dòng
+    line_spacing = 10  # Khoảng cách giữa các dòng.
     total_height = 0
 
-    # Tính chiều cao của từng đoạn văn bản
+    # Tính chiều cao của từng đoạn văn bản.
     for line in lines:
         while line:
             i = 1
@@ -211,7 +215,6 @@ def get_text_height(text, font, rect):
 
     return total_height
 
-
 def change_scene(text, options, text_rect, option_rect):
     highlighted_index = -1
     running_scene = True
@@ -224,6 +227,7 @@ def change_scene(text, options, text_rect, option_rect):
                 break
 
         draw_hud()
+        display_stats(screen, player)
 
         # Hiển thị văn bản và các tùy chọn
         highlighted_index = draw_text_and_options(
@@ -253,17 +257,16 @@ def change_scene(text, options, text_rect, option_rect):
 
 text_rect = pygame.Rect(480, 100, 760, 600) # Khung hoạt động của đoạn văn.
 option_rect = pygame.Rect(500, 400, 760, 100) # Khung hoạt động của các lựa chọn.
-ui_rect = pygame.Rect(750, 100, 1000, 600 ) # Khung giao diện (máu, giáp, đói bụng). Chưa làm xong.
+ui_rect = pygame.Rect(750, 100, 1000, 600 ) # Khung giao diện (máu, giáp, đói bụng).
 
 # Player Stat và các scene cho demo.
 
 player = {
     "name": "",
     "strength": 0,
-    "appetite": 0,
     "coin": 0,
+    "experiment": 0,
     "magical": "false",
-    "magical-number-cast": 0,
     "role": '',
     "will": '',
     "inventory": [],
@@ -281,6 +284,7 @@ scenes = [
                     "role": "Sinner",
                     "strength": 6,
                     "magic": True,
+                    "experiment": 3,
                     "magical-number-cast": 3,
                     "will": 'Giết quỷ.',
                     "coin": 10
@@ -292,6 +296,7 @@ scenes = [
                     "role": "Wanderer",
                     "strength": 8,
                     "magic": False,
+                    "experiment": 5,
                     "will": 'Sống.',
                     "coin": 2
                 }, "next_scene": 1
@@ -303,6 +308,7 @@ scenes = [
                     "strength": 5,
                     "magic": False,
                     "will": 'Khao khát.',
+                    "experiment": 3,
                     "coin": 20
                 }, "next_scene": 1
             },
@@ -314,6 +320,7 @@ scenes = [
                     "magic": True,
                     "magical-number-cast": 2,
                     "will": 'Học hỏi quỷ thuật.',
+                    "experiment": 1,
                     "coin": 5
                 }, "next_scene": 1
             }
@@ -390,8 +397,160 @@ scenes = [
     },
     {
         #Scene 3:
-            "text": (""),
-            "options":"",
+            "text": ("Vì bị lũ sói ở hai bên đường thu hút hoàn toàn sự chú ý, bạn đã vô tình bỏ qua chiếc lưới đã được lũ quái vật giăng sẳn. Roach hí lên một tiếng kêu đầy sợ hãi, trước mặt nó ngay bây giờ là hai sinh vật nhỏ bé với lớp da xanh, tay cầm mấy cây gỗ dài được chuốt nhọn làm giáo. Cách ăn mặc của bọn chúng không khác gì người tiền sử, chỉ có một chiếc khố cùng vài hiện vật trang trí đeo trên cổ hoặc tay. Chúng gào lên thứ ngôn ngữ kì dị khi lao thẳng về phía bạn... Goblin... Bạn thì thầm trong miệng khi nhớ về lời cảnh báo của thầy cũ... Ông ấy đã qua đời trong một lần lũ goblin và hob tấn công vào làng."),
+            "options": [
+                {
+                    "text" : "Tìm cách nhảy qua đầu của hai con goblin.",
+                    "effect" : {"health": -1},
+                    "next_scene": 4,
+                },
+            ]
+    },
+    {
+        #Scene 4:
+            "text": ("Nhảy qua hai con goblin là một hành động táo bạo, nhưng bạn biết mình không có nhiều lựa chọn. Bạn thành công đáp xuống đất, tạo khoảng cách với chúng... nhưng chỉ trong chốc lát. Một tiếng gào khác vang lên, từ xa, bạn nhận ra đây không chỉ là hai con goblin đơn lẻ mà là cả một đàn. Ít nhất năm, có thể là mười con... Bọn chúng đang dần tiến lại phía bạn, ánh lửa từ ngọn đuốc của chúng làm sáng cả một góc rừng."),
+            "options": [
+            {
+                "text": "Tôi vung vũ khí lao thẳng vào lũ goblin, hy vọng đánh bại càng nhiều càng tốt trước khi kiệt sức.",
+                "requirement": {"strength": 6},
+                "attributes": {"health": -2},
+                "sateless": "Tôi không có đủ sức để chiến đấu trực tiếp với lũ goblin.",
+                "next_scene": 5,
+            },
+            {
+                "text": "Dùng phép thuật thi triển một quả cầu lửa lớn, hy vọng làm chùn bước kẻ địch.",
+                "requirement": {"magical-number-cast": 2, "role": ["Sinner", "Demon Believer"]},
+                "effect": {"magical-number-cast": -2},
+                "attributes": {"health": -1},
+                "sateless": "Tôi không thể sử dụng phép thuật ngay bây giờ.",
+                "next_scene": 5,
+            },
+            {
+                "text": "Chạy vào rừng, hy vọng rằng bóng tối sẽ giúp tôi trốn thoát.",
+                "attributes": {"health": -1},
+                "next_scene": 6,
+            }
+        ]
+    },
+    {
+        #Scene 5:
+            "text": ("Bạn bị thương không nhẹ, máu từ những vết trầy xước và đâm cắt khiến bạn yếu dần. Tuy nhiên, sau vài giờ chạy trốn, bạn cuối cùng cũng thoát khỏi khu vực nguy hiểm. Trước mặt bạn là một hang động, bên trong phát ra ánh sáng lập lòe của lửa. Có lẽ đây là nơi trú ẩn của một ai đó... hoặc thứ gì đó."),
+            "options": [
+            {
+                "text": "Tiến vào hang động, hy vọng tìm được nơi nghỉ chân hoặc điều gì hữu ích.",
+                "next_scene": 7,
+            },
+            {
+                "text": "Tôi không tin vào những điều bất ngờ. Tôi tìm chỗ nghỉ ngơi ngoài trời, dù nguy hiểm nhưng an toàn hơn vào hang.",
+                "attributes": {"health": -1},
+                "next_scene": 8,
+            }
+        ]
+    },
+    {
+        #Scene 6:
+            "text": ("Bóng tối rừng già thực sự đáng sợ, đặc biệt khi bạn không biết rõ phương hướng. Bạn cảm thấy như có những đôi mắt dõi theo từ mọi hướng. Tiếng bước chân của những sinh vật lạ vang lên gần hơn. Bạn dừng lại, cảm nhận không khí xung quanh... Có điều gì đó đang đến gần."),
+            "options": [
+            {
+                "text": "Sử dụng vũ khí, chuẩn bị cho một trận chiến trong bóng tối.",
+                "requirement": {"items": ["thanh trường kiếm", "cây rìu cán dài"]},
+                "attributes": {"health": -2},
+                "sateless": "Tôi không có vũ khí đủ mạnh.",
+                "next_scene": 9,
+            },
+            {
+                "text": "Tôi dùng ma pháp để thắp sáng khu vực xung quanh, tạo ra một ngọn lửa lớn để dọa địch.",
+                "requirement": {"magical-number-cast": 1, "role": ["Sinner", "Demon Believer"]},
+                "effect": {"magical-number-cast": -1},
+                "next_scene": 9,
+            },
+            {
+                "text": "Tôi tiếp tục chạy, không dừng lại bất kỳ giây phút nào.",
+                "attributes": {"health": -2},
+                "next_scene": 8,
+            }
+        ]
+    },
+    {
+        #Scene 7:
+            "text": ("Bạn nhẹ nhàng tiến vào hang động. Ánh sáng từ ngọn lửa lập lòe chiếu sáng từng vách đá thô ráp. Bên trong, bạn nhìn thấy một người đàn ông già với mái tóc bạc trắng, tay cầm một cây gậy dài. Ông ta mặc một chiếc áo choàng bạc phơ, ánh mắt đầy kinh nghiệm nhưng lại toát lên vẻ nguy hiểm. Ông nhìn bạn, mỉm cười mời bạn lại gần. \"Ta đã chờ ngươi,\" ông nói, giọng trầm ấm nhưng đầy bí ẩn. Đây có phải là một cái bẫy?"),
+            "options": [
+            {
+                "text": "Tiến lại gần và trò chuyện, cố gắng tìm hiểu lý do ông ấy biết bạn.",
+                "next_scene": 10,
+            },
+            {
+                "text": "Tôi không tin ông ta. Tôi rút vũ khí và yêu cầu ông giải thích ngay.",
+                "requirement": {"items": ["thanh trường kiếm", "cây dao nhỏ"]},
+                "sateless": "Tôi không có vũ khí để đe dọa ông ta.",
+                "next_scene": 11,
+            },
+            {
+                "text": "Tôi quay người rời khỏi hang động, cảm giác nơi này không an toàn.",
+                "next_scene": 8,
+            }
+        ]
+    },
+    {
+        #Scene 8:
+            "text": ("Bạn tìm được một gò đất cao, có thể quan sát xung quanh và tránh bị tấn công bất ngờ. Trăng vẫn sáng trên bầu trời, nhưng không đủ để xua tan đi sự cô đơn và mệt mỏi của bạn. Ngồi xuống, bạn kiểm tra vết thương của mình. Dù không nghiêm trọng, chúng cũng đủ khiến bạn mất đi sức lực. Bạn ngủ thiếp đi trong khi vẫn giữ chặt vũ khí trong tay, sẵn sàng cho bất kỳ điều gì."),
+            "options": [
+            {
+                "text": "Tôi sẽ cố gắng ngủ để hồi phục sức lực.",
+                "attributes": {"health": 2},
+                "next_scene": 12,
+            },
+            {
+                "text": "Tôi không thể ngủ. Tôi phải đi tiếp để giữ khoảng cách với lũ goblin.",
+                "attributes": {"health": -1},
+                "next_scene": 9,
+            }
+        ]
+    },
+    {
+        #Scene 9:
+            "text": ("Tiếng gió rít qua những tán cây và tiếng chân nhẹ nhàng vang lên. Bạn quay người, phát hiện một sinh vật nhỏ bé nhưng nhanh nhẹn đang lao về phía mình — một goblin. Nó gào lên khi lao tới, tay cầm một thanh dao thô sơ nhưng sắc bén. Bạn có rất ít thời gian để phản ứng."),
+            "options": [
+        {
+                "text": "Tôi dùng vũ khí để chống trả.",
+                "requirement": {"items": ["thanh trường kiếm", "cây rìu cán dài"]},
+                "attributes": {"health": -2},
+                "sateless": "Tôi không có vũ khí để đối phó.",
+                "next_scene": 10,
+            },
+            {
+                "text": "Tôi dùng phép thuật để bắn hạ nó trước khi nó tới gần.",
+                "requirement": {"magical-number-cast": 1, "role": ["Sinner", "Demon Believer"]},
+                "effect": {"magical-number-cast": -1},
+                "attributes": {"health": -1},
+                "sateless": "Tôi không thể thi triển phép thuật ngay bây giờ.",
+                "next_scene": 10,
+            },
+            {
+                "text": "Tôi né sang một bên và cố gắng chạy thoát.",
+                "attributes": {"health": -3},
+                "next_scene": 8,
+            }
+        ]
+    },
+    {   
+        #Scene 10:
+            "text": ("Người đàn ông già nhìn bạn một cách chăm chú. \"Ngươi không phải một kẻ tầm thường. Số mệnh đã dẫn dắt ngươi đến đây,\" ông nói, giọng nói dường như vang vọng trong đầu bạn. Ông đưa cho bạn một vật — một viên pha lê phát sáng yếu ớt. \"Hãy cầm lấy, nó sẽ dẫn đường cho ngươi khi bóng tối bao trùm.\" Bạn cảm thấy một luồng sức mạnh nhỏ bé truyền vào cơ thể mình khi chạm vào viên pha lê."),
+            "options": [
+            {
+                "text": "Tôi nhận viên pha lê và cảm ơn ông ta.",
+                "add_items": ["viên pha lê ánh sáng"],
+                "attributes": {"health": 2},
+            },
+            {
+                "text": "Tôi từ chối món quà và hỏi ông ta về lý do thực sự của sự giúp đỡ này.",
+            },
+            {
+                "text": "Tôi rút vũ khí và đe dọa ông ta, nghĩ rằng đây có thể là một cái bẫy.",
+                "requirement": {"items": ["cây rìu cán dài", "thanh trường kiếm"]},
+                "sateless": "Tôi không có vũ khí đủ mạnh để đe dọa ông ta.",
+            }
+        ]
     }
 ]
 
@@ -403,6 +562,7 @@ def apply_status(option, player):
     if "attributes" in option:
         for key, value in option["attributes"].items():
             player[key] = value
+            print(player)
 
     # Sửa đổi thông số
     if "effect" in option:
@@ -416,7 +576,7 @@ def apply_status(option, player):
             if item not in player["inventory"]:
                 show_popup(screen, f"Bạn đã nhận được một {item}.")
                 player["inventory"].append(item)
-                print(player)
+
 
     # Xóa item
     if "remove_items" in option:
@@ -451,8 +611,6 @@ def check_requirements(option, player):
                     return False, key
                 
     return True, None 
-
-
 
 def main():
     current_scene = 0

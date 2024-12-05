@@ -53,7 +53,9 @@ def draw_menu(highlighted_index):
     time_since_change = current_time - last_change_time # Thời gian đã trôi qua từ lần đổi cuối.
 
     if time_since_change > background_change_time: # Nếu đã vượt quá thời gian quy định, bắt đầu đổi.
-        alpha = max(255 - int((time_since_change - background_change_time) / fade_duration * 255), 0) # Trừ dần giá trị alpha theo một tỉ lệ của fade_duration, để xem được bao nhiêu phần trăm của alpha với tổng số 255. càng giảm, hình tiếp theo càng rõ.
+        alpha = max(255 - int((time_since_change - background_change_time) / fade_duration * 255), 0) 
+        # Trừ dần giá trị alpha theo một tỉ lệ của fade_duration, để xem được bao nhiêu phần trăm của alpha với tổng số 255. 
+        # càng giảm, hình tiếp theo càng rõ.
         if alpha <= 0:
             current_background_index = next_background_index
             next_background_index = (current_background_index + 1) % len(background_images)
@@ -65,15 +67,19 @@ def draw_menu(highlighted_index):
     
     # Hiển thị background
     screen.blit(current_bg, (0, 0))
-    next_bg.set_alpha(255 - alpha) # Độ trong suốt là 255 - alpha, alpha lúc đầu sẽ là 255, trừ phát ra 0, hình tiếp theo sẽ trong suốt. Nhưng alpha càng ngày càng trừ vậy số này sẽ càng ngày càng lớn và hình tiếp theo càng ngày càng rõ.
+    next_bg.set_alpha(255 - alpha) 
+    # Độ trong suốt là 255 - alpha, alpha lúc đầu sẽ là 255, trừ phát ra 0, hình tiếp theo sẽ trong suốt. 
+    # Nhưng alpha càng ngày càng trừ vậy số này sẽ càng ngày càng lớn và hình tiếp theo càng ngày càng rõ.
     screen.blit(next_bg, (0, 0))
 
-    global menu_rects
+    global menu_rects #Tham chiếu đến biến toàn cục.
     menu_rects = []
 
-    for idx, option in enumerate(menu_option): # Hàm liệt kê trong python
+    for idx, option in enumerate(menu_option): # Hàm liệt kê trong python, với idx là vị trí trong khi option là các lựa chọn.
         text_rect_x = screen_width // 4
-        text_rect_y = screen_height // 2 - 80 + idx * 60 # idx dùng để cách lựa chọn. Lựa chọn thứ nhất tại chỗ, thứ 2 cách thứ nhất 60, thứ ba cách thứ nhất 120.
+        text_rect_y = screen_height // 2 - 80 + idx * 60 
+        # idx dùng để cách lựa chọn. 
+        # Lựa chọn thứ nhất tại chỗ, thứ 2 cách thứ nhất 60, thứ ba cách thứ nhất 120.
 
         text_rect = font.get_rect(option) # Lấy kích thước của các text trong option
         text_rect.topleft = (text_rect_x, text_rect_y) # Đặt tọa độ góc trên bên trái cùng của rect text là tọa độ đã quy định.
@@ -85,12 +91,14 @@ def draw_menu(highlighted_index):
         font.render_to(screen, (text_rect.x, text_rect.y-1), option, black)
         font.render_to(screen, (text_rect.x, text_rect.y+1), option, black)
 
-        if idx == highlighted_index: # Trạng thái hover có đang diễn ra không. Nếu có, tô vàng, nếu không, giữ chữ màu trắng.
+        if idx == highlighted_index: 
+            # Trạng thái hover có đang diễn ra không. 
+            # Nếu có, tô vàng, nếu không, giữ chữ màu trắng.
             font.render_to(screen, text_rect.topleft, option, highlight_color)
         else:
             font.render_to(screen, text_rect.topleft, option, white)
 
-    pygame.display.flip()
+    pygame.display.flip() #Cập nhật lại hình ảnh khi có thay đổi.
 
 def fade_out():
     # Tạo một biến surface, và fill nó bằng màu đen.
@@ -116,6 +124,7 @@ def main_menu():
     highlighted_index = -1
     running = True
     while running:
+        draw_menu(highlighted_index)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -123,9 +132,11 @@ def main_menu():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    mouse_pos = pygame.mouse.get_pos() 
-                    for idx, rect in enumerate(menu_rects): # Xét từng vị trí trong danh sách menu_rects. Nếu mouse_pos trùng với vị trí đó, mặc định là ấn. Chạy hàm theo từng option.
+                    mouse_pos = pygame.mouse.get_pos() #Lấy vị trí của chuột khi ấn. 
+                    for idx, rect in enumerate(menu_rects): 
+                        # Xét từng vị trí trong danh sách menu_rects. 
                         if rect.collidepoint(mouse_pos):
+                        # Nếu mouse_pos trùng với vị trí đó. Chạy hàm theo từng option.
                             click_sound.play()
                             if idx == 0:
                                 fade_out() 
@@ -142,18 +153,17 @@ def main_menu():
                 mouse_pos = pygame.mouse.get_pos()
                 highlighted_index = -1
                 for idx, rect in enumerate(menu_rects):
-                    if rect.collidepoint(mouse_pos): # Xét từng vị trí trong danh sách menu_rects. Nếu mouse_pos trùng với vị trí đó. Highlight option.
+                    if rect.collidepoint(mouse_pos): 
+                        # Xét từng vị trí trong danh sách menu_rects. 
+                        # Nếu mouse_pos trùng với vị trí đó, highlight option.
                         highlighted_index = idx
 
-        draw_menu(highlighted_index)
-
 def start_game():
-    print("Vào game...")
     pygame.time.delay(1500)
     main()
 
 def instruction():
-    print("Giới thiệu...")
+    print("Chưa làm...")
 
 def github_link():
     print("Github...")
