@@ -383,7 +383,7 @@ scenes = [
                     "sateless": "Tôi không thể dùng nỏ.",
                     "attributes": {"health": 4, "armor": 2},
                     "effect": {"arrow": -3},
-                    "next_scene": 4,
+                    "next_scene": 11,
                 },
                 {
                     "text": "Tốn một lượt ma pháp, thi triển hai phép Cầu Lửa bắn những lùm cây, tạo ra ngọn lửa rực giữa cánh.",
@@ -408,22 +408,14 @@ scenes = [
     },
     {
         #Scene 4:
-            "text": ("Nhảy qua hai con goblin là một hành động táo bạo, nhưng bạn biết mình không có nhiều lựa chọn. Bạn thành công đáp xuống đất, tạo khoảng cách với chúng... nhưng chỉ trong chốc lát. Một tiếng gào khác vang lên, từ xa, bạn nhận ra đây không chỉ là hai con goblin đơn lẻ mà là cả một đàn. Ít nhất năm, có thể là mười con... Bọn chúng đang dần tiến lại phía bạn, ánh lửa từ ngọn đuốc của chúng làm sáng cả một góc rừng."),
+            "text": ("Bạn lựa chọn một hành động táo bạo, nhưng bạn biết mình không còn cách nào khác. Bạn giật mạnh dây cương ra hiệu cho chú ngựa Roach và nó biết bạn đang muốn làm gì. Giậm chân một phát đầy uy lực, Roach bay qua đầu hai sinh vật gớm ghiếc và thành công đáp xuống đất, tạo khoảng cách với lũ goblin... nhưng chỉ trong chốc lát. Một tiếng gào khác vang lên, từ xa, bạn nhận ra đây không chỉ là hai con goblin đơn lẻ mà là cả một đàn. Ít nhất năm, có thể là mười con... Bọn chúng đang dần tiến lại phía bạn, ánh lửa từ ngọn đuốc của chúng làm sáng cả một góc rừng."),
             "options": [
             {
                 "text": "Tôi vung vũ khí lao thẳng vào lũ goblin, hy vọng đánh bại càng nhiều càng tốt trước khi kiệt sức.",
                 "requirement": {"strength": 6},
-                "attributes": {"health": -2},
+                "attributes": {"health": -3},
                 "sateless": "Tôi không có đủ sức để chiến đấu trực tiếp với lũ goblin.",
-                "next_scene": 5,
-            },
-            {
-                "text": "Dùng phép thuật thi triển một quả cầu lửa lớn, hy vọng làm chùn bước kẻ địch.",
-                "requirement": {"magical-number-cast": 2, "role": ["Sinner", "Demon Believer"]},
-                "effect": {"magical-number-cast": -2},
-                "attributes": {"health": -1},
-                "sateless": "Tôi không thể sử dụng phép thuật ngay bây giờ.",
-                "next_scene": 5,
+                "next_scene": 12,
             },
             {
                 "text": "Chạy vào rừng, hy vọng rằng bóng tối sẽ giúp tôi trốn thoát.",
@@ -551,6 +543,27 @@ scenes = [
                 "sateless": "Tôi không có vũ khí đủ mạnh để đe dọa ông ta.",
             }
         ]
+    },
+    {
+        #Scene 11:
+            "text": ("Những mũi tên sắc lẹm của bạn rít lên khi chúng dũng mãnh lao vào cánh rừng già... Từ sau những bụi cỏ âm u, một dòng nước bắn lên không trung, phết lên không gian xung quanh một màu đỏ chết chóc...#Bạn đã làm được, lũ thú săn mồi có thể vẫn chưa mất mạng, nhưng chắc chắn bọn chúng đã không còn đủ sức để có thể bắt kịp tốc độ của chú ngựa Roach... Những tưởng đến đây, bạn đã có thể an toàn mà đến đích. Nhưng không, từ phía cuối con đường, hai sinh vật nhỏ bé với lớp da xanh bước ra, tay cầm mấy cây gỗ dài được chuốt nhọn làm giáo. Cách ăn mặc của bọn chúng không khác gì người tiền sử, chỉ có một chiếc khố cùng vài hiện vật trang trí đeo trên cổ hoặc tay. Chúng gào lên thứ ngôn ngữ kì dị khi lao thẳng về phía bạn... #Goblin... Bạn thì thầm trong miệng khi nhớ về lời cảnh báo của thầy cũ... Ông ấy đã qua đời trong một lần lũ goblin và hob tấn công vào làng."),
+            "options": [
+            {       
+                    "text" : "Tôi chỉ có một lựa chọn duy nhất... Tìm cách nhảy qua đầu của hai con goblin.",
+                    "effect" : {"health": -1},
+                    "next_scene": 4,
+            }
+        ]
+    },
+    {
+        #Scene 12:
+            "text": ("Bạn bị đè bẹp bởi bầy goblin, chú ngựa Roach bị một ngọn giáo thô sơ đâm xuyên qua ngực và ngã ngụy. Bạn rớt xuống lưng ngựa và nằm bất lực giữa bầy goblin. Chúng dùng mọi loại vũ khí mà chúng góp nhặt được để đánh vào bụng bạn, đập vào đầu bạn, và chặt hết tay chân của bạn... #Dù có là một tay mạo hiểm giả cừ khôi, bạn vẫn chỉ là con người, bạn đã quá tự cao vào bản thân... #Game over..."),
+            "options": [
+            {
+                    "text" : "Chơi lại từ đầu...",
+                    "next_scene" : 0,
+            }
+        ]
     }
 ]
 
@@ -558,19 +571,19 @@ scenes = [
 
 def apply_status(option, player):
 
-    # Gán thông số
+    # Gán stat.
     if "attributes" in option:
         for key, value in option["attributes"].items():
             player[key] = value
             print(player)
 
-    # Sửa đổi thông số
+    # Sửa đổi stat.
     if "effect" in option:
         for key, value in option["effect"].items():
             if isinstance(value, int):
                 player[key] += value  # Cộng dồn cho giá trị
 
-    # Thêm item vào inventory
+    # Thêm item vào inventory.
     if "add_items" in option:
         for item in option["add_items"]:
             if item not in player["inventory"]:
@@ -578,7 +591,7 @@ def apply_status(option, player):
                 player["inventory"].append(item)
 
 
-    # Xóa item
+    # Xóa item.
     if "remove_items" in option:
         for item in option["remove_items"]:
             if item in player["inventory"]:
@@ -590,7 +603,7 @@ def check_requirements(option, player):
     
     for key, value in requirements.items():
         if key == "items":
-            # Nếu yêu cầu là item, kiểm tra item của player
+            # Nếu yêu cầu là item, kiểm tra item của player.
             if isinstance(value, list):
                 if not any(item in player["inventory"] for item in value):
                     return False, key  
@@ -599,7 +612,7 @@ def check_requirements(option, player):
                     return False, key  
                 
         elif key == "role":
-            # Nếu yêu cầu là role, kiểm tra role của player
+            # Nếu yêu cầu là role, kiểm tra role của player.
             if isinstance(value, list):
                 if player.get("role") not in value:
                     return False, key 
@@ -607,6 +620,7 @@ def check_requirements(option, player):
                 if player.get("role", '') != value:
                     return False, key 
         else:
+            # Nếu không, kiểm tra chỉ số.
                 if player.get(key, 0) < value:
                     return False, key
                 

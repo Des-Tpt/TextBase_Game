@@ -21,7 +21,7 @@ def display_stats(screen, player):
             health_image = pygame.image.load('assets/gui/hp/3hp.png')
         elif health_value == 4:
             health_image = pygame.image.load('assets/gui/hp/4hp.png')
-        elif health_value == 0:
+        elif health_value <= 0:
             health_image = pygame.image.load('assets/gui/hp/0hp.png')
 
         screen.blit(health_image, (start_x, start_y))
